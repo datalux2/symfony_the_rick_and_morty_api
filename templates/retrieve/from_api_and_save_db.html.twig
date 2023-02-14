@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    
+    {% if result is null or error %}
+        Rezultat jest pusty
+    {% else %}
+        Postacie zostały zapisane do bazy
+    {% endif %}
+    
+{% endblock %}

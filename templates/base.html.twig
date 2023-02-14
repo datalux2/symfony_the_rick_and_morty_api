@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ app_name|trans }}{% block subtitle %}{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
+        {# Run `composer require symfony/webpack-encore-bundle` to start using Symfony UX #}
+        {% block stylesheets %}
+            {{ encore_entry_link_tags('app') }}
+        {% endblock %}
+
+        {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+        {% endblock %}
+    </head>
+    <body>
+        <div class="display-6 text-center text-uppercase fw-bold pb-5 pt-5 position-relative">
+            {{ app_name|trans }}
+        </div>
+        {% set current_route_name = app.request.get('_route') %}
+        <div id="menu-container" class="float-start">
+            <ul id="menu" class="list-group ms-4">
+                <li class="list-group-item p-0{% if current_route_name == 'home' %} active{% endif %}"><a href="{{ path('home') }}" class="d-block text-black w-100 p-2 text-center">Strona główna</a></li>
+                <li class="list-group-item p-0{% if current_route_name == 'app_retrieve_from_api_and_save_db' %} active{% endif %}"><a href="{{ path('app_retrieve_from_api_and_save_db') }}" class="d-block text-black w-100 p-2 text-center">Pobierz postacie z API i zapisz do bazy</a></li>
+                <li class="list-group-item p-0{% if current_route_name == 'app_retrieve_from_db_json' %} active{% endif %}"><a href="{{ path('app_retrieve_from_db_json') }}" class="d-block text-black w-100 p-2 text-center">Pobierz postacie z bazy jako JSON</a></li>
+            </ul>
+        </div>
+        <div id="content" class="float-start ms-4">
+            {% block body %}{% endblock %}
+        </div>
+        <div id="footer">
+            
+        </div>
+    </body>
+</html>
