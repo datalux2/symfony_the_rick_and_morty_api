@@ -11,10 +11,18 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use App\Classes\MyExtendedHttpClient;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use App\DTO\Response\Transformer\CharactersResponseDTOTransformer;
 
 #[Route('/retrieve')]
 class RetrieveController extends AbstractController
-{     
+{
+    private CharactersResponseDTOTransformer $charactersResponseDTOTransformer;
+    
+    public function __construct(CharactersResponseDTOTransformer $charactersResponseDTOTransformer)
+    {
+        $this->charactersResponseDTOTransformer = $charactersResponseDTOTransformer;
+    }
+    
     #[Route('/from_api_and_save_db', name: 'app_retrieve_from_api_and_save_db', methods: ['GET'])]
     public function retrieve_from_api_and_save_db(EntityManagerInterface $entityManager, ManagerRegistry $doctrine)
     {   
@@ -99,17 +107,17 @@ class RetrieveController extends AbstractController
     {
         $characters_entities = $entityManager->getRepository(Characters::class)->findAll();
         
+        $resultDTO = $this->charactersResponseDTOTransformer->transformFromObjects($characters_entities);
+        
         return $this->json(
-            $characters_entities,
+            $resultDTO,
             headers: ['Content-Type' => 'application/json;charset=UTF-8']
         );
     }
 
     #[Route('/from_db_json/{name}', name: 'app_retrieve_from_db_json_by_name', methods: ['GET'])]
     public function retrieve_from_db_json_by_name(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        //$characters_entities = $entityManager->getRepository(Characters::class)->findAll();
-        
+    {   
         $routeParams = $request->attributes->get('_route_params');
         
         $result = $entityManager->getRepository(Characters::class)->createQueryBuilder('o')
@@ -118,8 +126,10 @@ class RetrieveController extends AbstractController
                 ->getQuery()
                 ->getResult();
         
+        $resultDTO = $this->charactersResponseDTOTransformer->transformFromObjects($result);
+        
         return $this->json(
-            $result,
+            $resultDTO,
             headers: ['Content-Type' => 'application/json;charset=UTF-8']
         );
     }
