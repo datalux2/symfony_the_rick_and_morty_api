@@ -2,8 +2,9 @@
 
 {% block body %}
     
-    {% if result is null or error %}
-        Rezultat jest pusty
+    {% if error %}
+        Rezultat jest pusty. Powodem jest:<br/><br/>
+        {{ comment }}
     {% else %}
         Postacie zostały zapisane do bazy
     {% endif %}

@@ -9,6 +9,8 @@ use App\Entity\Characters;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use App\Classes\MyExtendedHttpClient;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 #[Route('/retrieve')]
 class RetrieveController extends AbstractController
@@ -16,69 +18,79 @@ class RetrieveController extends AbstractController
     #[Route('/from_api_and_save_db', name: 'app_retrieve_from_api_and_save_db', methods: ['GET'])]
     public function retrieve_from_api_and_save_db(EntityManagerInterface $entityManager, ManagerRegistry $doctrine)
     {   
-        $result = shell_exec("curl --ssl-no-revoke https://rickandmortyapi.com/api/character");
-        
-        if ($result !== null)
+        try
         {
-            $result_array = json_decode($result, true);
-            
-            $pages = (int)$result_array['info']['pages'];
-            
             $doctrine->getRepository(Characters::class)->deleteAllCharacters();
             
             $entityManager->getConnection()->beginTransaction();
             
+            $http_client = new MyExtendedHttpClient();
+
+            $result = $http_client->request('GET', $_ENV['API_CHARACTERS_URL'], []);
+
+            $content = $result->getContent();
+
+            $result_array = json_decode($content, true);
+
+            $pages = (int)$result_array['info']['pages'];
+
             $error = false;
             
+            $comment = '';
+
             for($i = 1; $i <= $pages; $i++)
             {
-                $result2 = shell_exec("curl --ssl-no-revoke https://rickandmortyapi.com/api/character/?page=" . $i);
-                                
-                if ($result2 !== null)
+                $result2 = $http_client->request('GET', $_ENV['API_CHARACTERS_URL'] . 
+                        $_ENV['API_CHARACTERS_URL_PARAMS'] . $i, []);
+
+                $content2 = $result2->getContent();
+
+                $result_array2 = json_decode($content2, true);
+
+                if(!empty($result_array2['results']))
                 {
-                    $result_array2 = json_decode($result2, true);
-                    
-                    if(!empty($result_array2['results']))
+                    foreach($result_array2['results'] as $row)
                     {
-                        foreach($result_array2['results'] as $row)
-                        {
-                            $character = new Characters();
-                            $character->setName($row['name']);
-                            $character->setOriginName($row['origin']['name']);
-                            $character->setOriginUrl($row['origin']['url']);
-                            $character->setUrl($row['url']);
-                            $character->setImage($row['image']);
-                            $character->setStatus($row['status']);
-                            $character->setSpecies($row['species']);
-                            $character->setType($row['type']);
-                            $character->setGender($row['gender']);
-                            $created_string = date('Y-m-d H:i:s', strtotime($row['created']));
-                            $created = \DateTime::createFromFormat('Y-m-d H:i:s', $created_string); 
-                            $character->setCreated($created);
-                            
-                            $entityManager->persist($character);
-                            $entityManager->flush();
-                        }
+                        $character = new Characters();
+                        $character->setId($row['id']);
+                        $character->setName($row['name']);
+                        $character->setOriginName($row['origin']['name']);
+                        $character->setOriginUrl($row['origin']['url']);
+                        $character->setUrl($row['url']);
+                        $character->setImage($row['image']);
+                        $character->setStatus($row['status']);
+                        $character->setSpecies($row['species']);
+                        $character->setType($row['type']);
+                        $character->setGender($row['gender']);
+                        $created_string = date('Y-m-d H:i:s', strtotime($row['created']));
+                        $created = \DateTime::createFromFormat('Y-m-d H:i:s', $created_string); 
+                        $character->setCreated($created);
+
+                        $entityManager->persist($character);
+                        $entityManager->flush();
                     }
                 }
                 else
                 {
                     $error = true;
                     $entityManager->getConnection()->rollBack();
-                    break;
+                    $comment = 'Brak klucza "results" w tablicy wyników';
                 }
             }
-            
-            if (!$error)
-            {
-                $entityManager->getConnection()->commit();
-            }
+
+            $entityManager->getConnection()->commit();
+        }
+        catch(TransportExceptionInterface $ex)
+        {
+            $error = true;
+            $entityManager->getConnection()->rollBack();
+            $comment = $ex->getMessage();
         }
         
         return $this->render('retrieve/from_api_and_save_db.html.twig', [
             'app_name' => $_ENV["APP_NAME"],
-            'result' => $result,
-            'error' => $error
+            'error' => $error,
+            'comment' => $comment
         ]);
     }
     

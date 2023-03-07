@@ -18,7 +18,6 @@ class Characters
      *
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
 
@@ -60,14 +59,14 @@ class Characters
     /**
      * @var string
      *
-     * @ORM\Column(name="status", type="string", length=255, nullable=false)
+     * @ORM\Column(name="status", type="string", length=0, nullable=false)
      */
     private $status;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="species", type="string", length=255, nullable=false)
+     * @ORM\Column(name="species", type="string", length=0, nullable=false)
      */
     private $species;
 
@@ -81,7 +80,7 @@ class Characters
     /**
      * @var string
      *
-     * @ORM\Column(name="gender", type="string", length=255, nullable=false)
+     * @ORM\Column(name="gender", type="string", length=0, nullable=false)
      */
     private $gender;
 
@@ -95,6 +94,13 @@ class Characters
     public function getId(): ?int
     {
         return $this->id;
+    }
+    
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+        
+        return $this;
     }
 
     public function getName(): ?string
