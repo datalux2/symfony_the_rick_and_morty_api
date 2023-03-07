@@ -1,4 +1,4 @@
-Symfony The Rick and morty api
+Symfony The Rick and Morty API
 ==============================
 
 Projekt został zrobiony za pomocą:
