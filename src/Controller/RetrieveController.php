@@ -25,7 +25,7 @@ class RetrieveController extends AbstractController
     
     #[Route('/from_api_and_save_db', name: 'app_retrieve_from_api_and_save_db', methods: ['GET'])]
     public function retrieve_from_api_and_save_db(EntityManagerInterface $entityManager, ManagerRegistry $doctrine)
-    {   
+    {
         try
         {
             $doctrine->getRepository(Characters::class)->deleteAllCharacters();
@@ -117,7 +117,7 @@ class RetrieveController extends AbstractController
 
     #[Route('/from_db_json/{name}', name: 'app_retrieve_from_db_json_by_name', methods: ['GET'])]
     public function retrieve_from_db_json_by_name(Request $request, EntityManagerInterface $entityManager): Response
-    {   
+    {
         $routeParams = $request->attributes->get('_route_params');
         
         $result = $entityManager->getRepository(Characters::class)->createQueryBuilder('o')
